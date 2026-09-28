@@ -31,6 +31,7 @@ import {
   Toolbar,
   Tooltip,
   Typography,
+  useTheme,
 } from "@mui/material";
 import { useUnit } from "effector-react";
 import { useEffect, useState } from "react";
@@ -82,6 +83,7 @@ function MessageStatus({
 }
 
 export function MessengerPage() {
+  const theme = useTheme();
   const [
     credentials,
     settings,
@@ -126,6 +128,14 @@ export function MessengerPage() {
   }, [chats, credentials]);
 
   const needsSettings = settings && (settings.webhookUrl || settings.incomingWebhook !== "yes");
+  const chatBackground = theme.palette.mode === "dark" ? "#0e1621" : "#dfe7ee";
+  const outgoingBubble = theme.palette.mode === "dark" ? "#2b5278" : "#d9fdd3";
+
+  const submitMessage = () => {
+    if (!activeChat || !message.trim()) return;
+    messageSubmitted({ chatId: activeChat.id, text: message });
+    setMessage("");
+  };
 
   if (!credentials) {
     return (
@@ -138,7 +148,7 @@ export function MessengerPage() {
           bgcolor: "background.default",
         }}
       >
-        <Paper sx={{ width: "min(100%, 440px)", p: { xs: 3, sm: 4 }, borderRadius: 4 }}>
+        <Paper sx={{ width: "min(100%, 440px)", p: { xs: 3, sm: 4 }, borderRadius: 4, border: 1, borderColor: "divider", boxShadow: "0 24px 80px rgba(15, 38, 57, 0.12)" }}>
           <Stack spacing={3}>
             <Stack direction="row" spacing={1.5} sx={{ alignItems: "center" }}>
               <Avatar sx={{ bgcolor: "primary.main", width: 48, height: 48 }}>
@@ -187,11 +197,11 @@ export function MessengerPage() {
     <Box sx={{ minHeight: "100svh", p: { xs: 0, md: 2 }, display: "grid", placeItems: "center" }}>
       <Paper
         sx={{
-          width: "min(1400px, 100%)",
+          width: "min(1360px, 100%)",
           height: { xs: "100svh", md: "min(850px, calc(100svh - 32px))" },
           display: "flex",
           overflow: "hidden",
-          borderRadius: { xs: 0, md: 3 },
+          borderRadius: { xs: 0, md: 2.5 },
           border: { md: 1 },
           borderColor: "divider",
         }}
@@ -205,7 +215,7 @@ export function MessengerPage() {
             borderColor: "divider",
           }}
         >
-          <AppBar position="static" color="transparent" elevation={0}>
+          <AppBar position="static" color="transparent" elevation={0} sx={{ borderBottom: 1, borderColor: "divider" }}>
             <Toolbar sx={{ gap: 1 }}>
               <Typography sx={{ flexGrow: 1, fontWeight: 700 }}>Сообщения</Typography>
               <Tooltip title="Настройки">
@@ -246,7 +256,7 @@ export function MessengerPage() {
                   chatSelected(chat.id);
                   setMobileChatOpen(true);
                 }}
-                sx={{ py: 1.5 }}
+                sx={{ py: 1.25, px: 2, "&.Mui-selected": { bgcolor: "action.selected", borderRight: 3, borderColor: "primary.main" } }}
               >
                 <Badge
                   badgeContent={chat.unreadCount || undefined}
@@ -291,12 +301,14 @@ export function MessengerPage() {
             flex: 1,
             minWidth: 0,
             flexDirection: "column",
-            bgcolor: "#dce6ec",
+            bgcolor: chatBackground,
+            backgroundImage: theme.palette.mode === "dark" ? "radial-gradient(rgba(255,255,255,0.025) 1px, transparent 1px)" : "radial-gradient(rgba(79, 111, 134, 0.12) 1px, transparent 1px)",
+            backgroundSize: "18px 18px",
           }}
         >
           {activeChat ? (
             <>
-              <AppBar position="static" color="inherit" elevation={0}>
+              <AppBar position="static" color="inherit" elevation={0} sx={{ borderBottom: 1, borderColor: "divider" }}>
                 <Toolbar>
                   <IconButton
                     sx={{ display: { md: "none" }, mr: 1 }}
@@ -329,8 +341,8 @@ export function MessengerPage() {
                       px: 1.5,
                       py: 1,
                       borderRadius: 2,
-                      bgcolor: item.direction === "outgoing" ? "#d9fdd3" : "background.paper",
-                      boxShadow: 1,
+                      bgcolor: item.direction === "outgoing" ? outgoingBubble : "background.paper",
+                      boxShadow: "0 1px 2px rgba(0, 0, 0, 0.12)",
                     }}
                   >
                     <Typography sx={{ whiteSpace: "pre-wrap", overflowWrap: "anywhere" }}>
@@ -353,27 +365,31 @@ export function MessengerPage() {
                 component="form"
                 onSubmit={(event) => {
                   event.preventDefault();
-                  if (message.trim()) {
-                    messageSubmitted({ chatId: activeChat.id, text: message });
-                    setMessage("");
-                  }
+                  submitMessage();
                 }}
-                sx={{ p: { xs: 1, sm: 2 }, display: "flex", gap: 1, bgcolor: "background.default" }}
+                sx={{ p: { xs: 1, sm: 1.5 }, display: "flex", gap: 1, bgcolor: "background.default", borderTop: 1, borderColor: "divider" }}
               >
                 <TextField
                   fullWidth
                   placeholder="Написать сообщение"
                   value={message}
                   onChange={(event) => setMessage(event.target.value)}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter" && !event.shiftKey) {
+                      event.preventDefault();
+                      submitMessage();
+                    }
+                  }}
                   multiline
                   maxRows={4}
                   slotProps={{ htmlInput: { maxLength: 4096 } }}
+                  sx={{ "& .MuiOutlinedInput-root": { borderRadius: 3, bgcolor: "action.hover" } }}
                 />
                 <IconButton
                   type="submit"
                   color="primary"
                   disabled={!message.trim()}
-                  sx={{ alignSelf: "flex-end" }}
+                  sx={{ alignSelf: "flex-end", width: 44, height: 44, bgcolor: "primary.main", color: "primary.contrastText", "&:hover": { bgcolor: "primary.dark" }, "&.Mui-disabled": { bgcolor: "action.disabledBackground" } }}
                 >
                   <SendRoundedIcon />
                 </IconButton>
