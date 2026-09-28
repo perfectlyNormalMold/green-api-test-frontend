@@ -151,6 +151,13 @@ export function MessengerPage() {
         }}
       >
         <Paper sx={{ width: "min(100%, 440px)", p: { xs: 3, sm: 4 }, borderRadius: 4, border: 1, borderColor: "divider", boxShadow: "0 24px 80px rgba(15, 38, 57, 0.12)" }}>
+          <Box
+            component="form"
+            onSubmit={(event) => {
+              event.preventDefault();
+              connectRequested({ idInstance, apiTokenInstance: token });
+            }}
+          >
           <Stack spacing={3}>
             <Stack direction="row" spacing={1.5} sx={{ alignItems: "center" }}>
               <Avatar sx={{ bgcolor: "primary.main", width: 48, height: 48 }}>
@@ -164,32 +171,35 @@ export function MessengerPage() {
               </Box>
             </Stack>
             <Typography color="text.secondary">
-              Подключите авторизованный Telegram-инстанс. Браузер запомнит данные до выхода из
-              приложения.
+              Подключите авторизованный Telegram-инстанс. Браузер может предложить сохранить
+              учётные данные в своём менеджере паролей.
             </Typography>
             <TextField
               label="idInstance"
+              name="idInstance"
               value={idInstance}
               onChange={(event) => setIdInstance(event.target.value)}
-              autoComplete="off"
+              autoComplete="username"
             />
             <TextField
               label="apiTokenInstance"
+              name="apiTokenInstance"
               type="password"
               value={token}
               onChange={(event) => setToken(event.target.value)}
-              autoComplete="off"
+              autoComplete="current-password"
             />
             {error && <Alert severity="error">{error}</Alert>}
             <Button
               variant="contained"
               size="large"
               disabled={!idInstance.trim() || !token.trim() || isPending}
-              onClick={() => connectRequested({ idInstance, apiTokenInstance: token })}
+              type="submit"
             >
               {isPending ? <CircularProgress size={22} color="inherit" /> : "Подключиться"}
             </Button>
           </Stack>
+          </Box>
         </Paper>
       </Box>
     );
