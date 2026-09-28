@@ -35,7 +35,8 @@ sample({
 });
 sample({ clock: notificationReceived, fn: (notification) => notification.body, target: notificationHandled });
 sample({ source: $credentials, clock: notificationReceived, filter: (credentials) => credentials !== null, fn: (credentials, notification) => ({ credentials: credentials!, receiptId: notification.receiptId }), target: deleteNotificationFx });
-sample({ source: $credentials, clock: receiveNotificationFx.doneData, filter: (credentials): credentials is Credentials => credentials !== null, target: pollNext });
+sample({ source: $credentials, clock: receiveNotificationFx.doneData, filter: (credentials, notification) => credentials !== null && notification === null, fn: (credentials) => credentials!, target: pollNext });
+sample({ source: $credentials, clock: deleteNotificationFx.done, filter: (credentials) => credentials !== null, fn: (credentials) => credentials!, target: pollNext });
 sample({ clock: receiveNotificationFx.failData, filter: (error) => !(error instanceof GreenApiError && error.isUnauthorized), fn: () => 2_000, target: waitFx });
 sample({ source: $credentials, clock: waitFx.done, filter: (credentials): credentials is Credentials => credentials !== null, target: pollNext });
 sample({ clock: receiveNotificationFx.failData, filter: (error) => error instanceof GreenApiError && error.isUnauthorized, target: pollingStopped });

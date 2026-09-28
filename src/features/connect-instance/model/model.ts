@@ -1,6 +1,6 @@
 import { createApiEffect } from "@/shared/api/create-api-effect";
 import { getSettings, getStateInstance, setSettings, type Credentials, type Settings } from "@/shared/api/green-api";
-import { createEvent, createStore, sample } from "effector";
+import { createEffect, createEvent, createStore, sample } from "effector";
 import { pending, reset } from "patronum";
 
 export type ConnectionStatus = "idle" | "checking" | "ready" | "restarting" | "error";
@@ -8,10 +8,25 @@ export type ConnectionStatus = "idle" | "checking" | "ready" | "restarting" | "e
 type ConnectionResult = { credentials: Credentials; settings: Settings };
 
 const defaultApiUrl = "https://4100.api.green-api.com";
+const storageKey = "green-api:credentials";
+
+function restoreCredentials() {
+  try {
+    const raw = sessionStorage.getItem(storageKey);
+    if (!raw) return null;
+    const value = JSON.parse(raw) as Partial<Credentials>;
+    return value.idInstance && value.apiTokenInstance && value.apiUrl ? (value as Credentials) : null;
+  } catch {
+    return null;
+  }
+}
 
 export const connectRequested = createEvent<{ idInstance: string; apiTokenInstance: string; apiUrl?: string }>();
 export const disconnectRequested = createEvent();
 export const settingsFixRequested = createEvent();
+export const credentialsRestored = createEvent();
+
+const restoreCredentialsFx = createEffect<void, Credentials | null>(() => restoreCredentials());
 
 const connectFx = createApiEffect<{ credentials: Credentials }, ConnectionResult, Error>(async ({ credentials }) => {
   const [{ stateInstance }, settings] = await Promise.all([getStateInstance({ credentials }), getSettings({ credentials })]);
@@ -47,7 +62,11 @@ sample({
   fn: ({ idInstance, apiTokenInstance, apiUrl }) => ({ credentials: { idInstance: idInstance.trim(), apiTokenInstance: apiTokenInstance.trim(), apiUrl: apiUrl?.trim() || defaultApiUrl } }),
   target: connectFx,
 });
+sample({ clock: credentialsRestored, target: restoreCredentialsFx });
+sample({ clock: restoreCredentialsFx.doneData, filter: (credentials) => credentials !== null, fn: (credentials) => ({ credentials: credentials! }), target: connectFx });
 sample({ clock: connectFx.doneData, fn: ({ credentials }) => credentials, target: $credentials });
 sample({ source: $credentials, clock: settingsFixRequested, filter: (credentials) => credentials !== null, fn: (credentials) => ({ credentials: credentials as Credentials }), target: setSettingsFx });
+sample({ clock: connectFx.doneData, fn: ({ credentials }) => credentials, target: createEffect((credentials: Credentials) => sessionStorage.setItem(storageKey, JSON.stringify(credentials))) });
+sample({ clock: disconnectRequested, target: createEffect(() => sessionStorage.removeItem(storageKey)) });
 
 reset({ clock: disconnectRequested, target: [$credentials] });

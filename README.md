@@ -1,35 +1,59 @@
-# React + TypeScript + Vite
+# Telegram Chat · GREEN-API
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+Тестовое React-приложение для отправки и получения текстовых сообщений в Telegram через GREEN-API.
 
-Currently, two official plugins are available:
+## Запуск
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+Нужен Node.js 20+ и Yarn 4.
 
-## React Compiler
-
-The React Compiler is enabled on this template. See [this documentation](https://react.dev/learn/react-compiler) for more information.
-
-Note: This will impact Vite dev & build performances.
-You can also try [the experimental native React Compiler support in plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md#rust-react-compiler) by using `compiler: true` in the plugin options instead of using the Babel plugin.
-
-## Expanding the Oxlint configuration
-
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
-
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
+```bash
+cmd.exe /d /c "yarn.cmd install"
+cmd.exe /d /c "yarn.cmd dev"
 ```
 
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+Vite выведет локальный адрес приложения. Проверки:
+
+```bash
+cmd.exe /d /c "yarn.cmd lint"
+cmd.exe /d /c "yarn.cmd build"
+```
+
+## Подготовка Telegram-инстанса
+
+1. Создайте и авторизуйте Telegram-инстанс в [консоли GREEN-API](https://console.green-api.com/).
+2. В приложении введите `idInstance` и `apiTokenInstance`.
+3. Если уведомления не настроены, нажмите «Настроить» в предупреждении приложения. Оно выставит пустой `webhookUrl` и включит уведомления, необходимые HTTP API. Инстанс после этого перезапускается, а настройки могут применяться до пяти минут.
+4. Создайте чат по номеру телефона в международном формате, например `79991234567`.
+5. Отправьте сообщение и ответьте на него с другого Telegram-аккаунта.
+
+## Что реализовано
+
+- проверка авторизации инстанса и его настроек;
+- создание чата через `checkAccount`;
+- optimistic-отправка сообщений через `sendMessage`;
+- получение уведомлений через последовательный `receiveNotification` → обработка → `deleteNotification`;
+- статусы исходящих сообщений и дедупликация;
+- адаптивная desktop/mobile вёрстка на MUI;
+- хранение токена и истории чатов только в `sessionStorage`;
+- Effector-модели в минимальной FSD-структуре.
+
+## Технические решения
+
+Приложение обращается в GREEN-API напрямую из браузера. CORS preflight и browser request проверены для API-хоста, поэтому отдельный backend или Vite proxy для тестового не нужны.
+
+Токен хранится только в `sessionStorage`: он переживает перезагрузку вкладки, но удаляется при завершении браузерной сессии. По кнопке «Выйти» данные очищаются сразу.
+
+Получение построено без `setInterval`: следующий запрос очереди запускается после ответа `receiveNotification` или успешного `deleteNotification`. Это не создаёт параллельных потребителей одной очереди.
+
+## Ограничения
+
+- Только текстовые сообщения.
+- GREEN-API не возвращает историю до первого запуска приложения; отображается история текущей браузерной сессии.
+- Не открывайте один инстанс в двух вкладках: они разделят очередь уведомлений.
+- Для production следует вынести API-вызовы в защищённый серверный слой, поскольку токен является частью URL GREEN-API.
+
+## Ссылки
+
+- [SendMessage](https://green-api.com/telegram/docs/api/sending/SendMessage/)
+- [Получение уведомлений через HTTP API](https://green-api.com/telegram/docs/api/receiving/technology-http-api/)
+- [SetSettings](https://green-api.com/telegram/docs/api/account/SetSettings/)
