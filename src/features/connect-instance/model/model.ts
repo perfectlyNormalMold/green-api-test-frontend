@@ -12,7 +12,7 @@ const storageKey = "green-api:credentials";
 
 function restoreCredentials() {
   try {
-    const raw = sessionStorage.getItem(storageKey);
+    const raw = localStorage.getItem(storageKey);
     if (!raw) return null;
     const value = JSON.parse(raw) as Partial<Credentials>;
     return value.idInstance && value.apiTokenInstance && value.apiUrl ? (value as Credentials) : null;
@@ -66,7 +66,7 @@ sample({ clock: credentialsRestored, target: restoreCredentialsFx });
 sample({ clock: restoreCredentialsFx.doneData, filter: (credentials) => credentials !== null, fn: (credentials) => ({ credentials: credentials! }), target: connectFx });
 sample({ clock: connectFx.doneData, fn: ({ credentials }) => credentials, target: $credentials });
 sample({ source: $credentials, clock: settingsFixRequested, filter: (credentials) => credentials !== null, fn: (credentials) => ({ credentials: credentials as Credentials }), target: setSettingsFx });
-sample({ clock: connectFx.doneData, fn: ({ credentials }) => credentials, target: createEffect((credentials: Credentials) => sessionStorage.setItem(storageKey, JSON.stringify(credentials))) });
-sample({ clock: disconnectRequested, target: createEffect(() => sessionStorage.removeItem(storageKey)) });
+sample({ clock: connectFx.doneData, fn: ({ credentials }) => credentials, target: createEffect((credentials: Credentials) => localStorage.setItem(storageKey, JSON.stringify(credentials))) });
+sample({ clock: disconnectRequested, target: createEffect(() => localStorage.removeItem(storageKey)) });
 
 reset({ clock: disconnectRequested, target: [$credentials] });

@@ -115,6 +115,7 @@ export function MessengerPage() {
   const [phoneNumber, setPhoneNumber] = useState("");
   const [message, setMessage] = useState("");
   const [mobileChatOpen, setMobileChatOpen] = useState(false);
+  const [isSubmittingNewChat, setIsSubmittingNewChat] = useState(false);
 
   useEffect(() => {
     if (!credentials) return;
@@ -126,6 +127,7 @@ export function MessengerPage() {
   useEffect(() => {
     if (credentials) chatsPersistenceRequested(credentials.idInstance);
   }, [chats, credentials]);
+
 
   const needsSettings = settings && (settings.webhookUrl || settings.incomingWebhook !== "yes");
   const chatBackground = theme.palette.mode === "dark" ? "#0e1621" : "#dfe7ee";
@@ -162,8 +164,8 @@ export function MessengerPage() {
               </Box>
             </Stack>
             <Typography color="text.secondary">
-              Подключите авторизованный Telegram-инстанс. Данные сохранятся только до закрытия
-              вкладки.
+              Подключите авторизованный Telegram-инстанс. Браузер запомнит данные до выхода из
+              приложения.
             </Typography>
             <TextField
               label="idInstance"
@@ -241,7 +243,11 @@ export function MessengerPage() {
               fullWidth
               startIcon={<AddRoundedIcon />}
               variant="contained"
-              onClick={() => setNewChatOpen(true)}
+              onClick={() => {
+                setPhoneNumber("");
+                setIsSubmittingNewChat(false);
+                setNewChatOpen(true);
+              }}
             >
               Новый чат
             </Button>
@@ -413,7 +419,12 @@ export function MessengerPage() {
           )}
         </Box>
       </Paper>
-      <Dialog open={newChatOpen} onClose={() => setNewChatOpen(false)} fullWidth maxWidth="xs">
+      <Dialog
+        open={newChatOpen && !(isSubmittingNewChat && !isNewChatPending && !newChatError)}
+        onClose={() => setNewChatOpen(false)}
+        fullWidth
+        maxWidth="xs"
+      >
         <DialogTitle>Новый чат</DialogTitle>
         <DialogContent>
           <Stack spacing={2} sx={{ mt: 1 }}>
@@ -435,7 +446,10 @@ export function MessengerPage() {
           <Button
             variant="contained"
             disabled={!phoneNumber.trim() || isNewChatPending}
-            onClick={() => newChatSubmitted(phoneNumber)}
+            onClick={() => {
+              setIsSubmittingNewChat(true);
+              newChatSubmitted(phoneNumber);
+            }}
           >
             {isNewChatPending ? <CircularProgress size={20} color="inherit" /> : "Создать"}
           </Button>

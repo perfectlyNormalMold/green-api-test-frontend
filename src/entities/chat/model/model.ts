@@ -50,7 +50,15 @@ export const $chats = createStore<Chat[]>([])
   .on(incomingMessageAdded, (chats, { chatId, title, message }) => {
     const existing = chats.find(({ id }) => id === chatId);
     if (!existing) return [{ id: chatId, title, messages: [message], unreadCount: 1 }, ...chats];
-    if (existing.messages.some(({ idMessage }) => idMessage && idMessage === message.idMessage)) return chats;
+    if (
+      existing.messages.some(
+        (existingMessage) =>
+          existingMessage.localId === message.localId ||
+          (Boolean(message.idMessage) && existingMessage.idMessage === message.idMessage),
+      )
+    ) {
+      return chats;
+    }
     return chats.map((chat) =>
       chat.id === chatId
         ? { ...chat, title: chat.title || title, messages: [...chat.messages, message], unreadCount: chat.unreadCount + 1 }
