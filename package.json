@@ -10,6 +10,13 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@emotion/react": "^11.14.0",
+    "@emotion/styled": "^11.14.1",
+    "@mui/icons-material": "^9.4.0",
+    "@mui/material": "^9.4.0",
+    "effector": "^23.4.4",
+    "effector-react": "^23.3.0",
+    "patronum": "^2.3.0",
     "react": "^19.2.8",
     "react-dom": "^19.2.8"
   },
@@ -24,6 +31,7 @@
     "babel-plugin-react-compiler": "^1.0.0",
     "oxfmt": "^0.70.0",
     "oxlint": "^1.81.0",
+    "oxlint-tsgolint": "^7.0.2003",
     "typescript": "7",
     "vite": "^8.3.0"
   }
