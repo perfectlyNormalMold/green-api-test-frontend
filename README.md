@@ -2,6 +2,12 @@
 
 Тестовое React-приложение для отправки и получения текстовых сообщений в Telegram через GREEN-API.
 
+## Демо
+
+<img src="docs/media/demo-screenshot.png" alt="Интерфейс Telegram Chat" width="100%">
+
+[Смотреть видео демо (MP4, 1.4 MB)](docs/media/demo-video.mp4)
+
 ## Запуск
 
 Нужен Node.js 20.19+ или 22.12+ и Yarn 4.18 (через Corepack).
