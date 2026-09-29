@@ -1,13 +1,16 @@
-import { CssBaseline, ThemeProvider, useMediaQuery } from "@mui/material";
-import { useMemo } from "react";
+import { CssBaseline, ThemeProvider } from "@mui/material";
 
-import { MessengerPage } from "@/pages/messenger/ui/MessengerPage";
+import { MessengerPage } from "@/pages/messenger";
 
 import { createAppTheme } from "./theme";
 
-export function App() {
-  const prefersDarkMode = useMediaQuery("(prefers-color-scheme: dark)");
-  const theme = useMemo(() => createAppTheme(prefersDarkMode ? "dark" : "light"), [prefersDarkMode]);
+const theme = createAppTheme("dark");
 
-  return <ThemeProvider theme={theme}><CssBaseline /><MessengerPage /></ThemeProvider>;
+export function App() {
+  return (
+    <ThemeProvider theme={theme}>
+      <CssBaseline />
+      <MessengerPage />
+    </ThemeProvider>
+  );
 }

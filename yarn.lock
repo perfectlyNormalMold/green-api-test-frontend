@@ -1544,6 +1544,7 @@ __metadata:
     babel-plugin-react-compiler: "npm:^1.0.0"
     effector: "npm:^23.4.4"
     effector-react: "npm:^23.3.0"
+    libphonenumber-js: "npm:^1.13.14"
     oxfmt: "npm:^0.70.0"
     oxlint: "npm:^1.81.0"
     oxlint-tsgolint: "npm:^7.0.2003"
@@ -1635,6 +1636,13 @@ __metadata:
   bin:
     json5: lib/cli.js
   checksum: 10c0/5a04eed94810fa55c5ea138b2f7a5c12b97c3750bc63d11e511dcecbfef758003861522a070c2272764ee0f4e3e323862f386945aeb5b85b87ee43f084ba586c
+  languageName: node
+  linkType: hard
+
+"libphonenumber-js@npm:^1.13.14":
+  version: 1.13.14
+  resolution: "libphonenumber-js@npm:1.13.14"
+  checksum: 10c0/262100ad46f9507bf4087f6a00241eb628c1427d0b26b24442e3e39df61ffd2d42e9c65bfc35200c9e204b2e9b5d2b696e506022113d0e9b659a8c3fed096b2e
   languageName: node
   linkType: hard
 

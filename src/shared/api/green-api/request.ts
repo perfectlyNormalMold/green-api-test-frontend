@@ -5,14 +5,16 @@ type RequestOptions = {
   credentials: Credentials;
   method: "GET" | "POST" | "DELETE";
   endpoint: string;
+  path?: string;
   body?: unknown;
   signal?: AbortSignal;
+  timeoutMs?: number;
 };
 
-function buildUrl(credentials: Credentials, endpoint: string) {
+function buildUrl(credentials: Credentials, endpoint: string, path?: string) {
   const baseUrl = credentials.apiUrl.replace(/\/$/, "");
   const [method, query] = endpoint.split("?", 2);
-  return `${baseUrl}/waInstance${credentials.idInstance}/${method}/${credentials.apiTokenInstance}${query ? `?${query}` : ""}`;
+  return `${baseUrl}/waInstance${credentials.idInstance}/${method}/${credentials.apiTokenInstance}${path ? `/${encodeURIComponent(path)}` : ""}${query ? `?${query}` : ""}`;
 }
 
 function getErrorMessage(payload: unknown, status: number) {
@@ -25,22 +27,55 @@ function getErrorMessage(payload: unknown, status: number) {
   return `GREEN-API вернул ошибку ${status}.`;
 }
 
-export async function request<Result>({ credentials, method, endpoint, body, signal }: RequestOptions): Promise<Result> {
+export async function request<Result>({
+  credentials,
+  method,
+  endpoint,
+  path,
+  body,
+  signal,
+  timeoutMs = endpoint.startsWith("receiveNotification") ? 30_000 : 15_000,
+}: RequestOptions): Promise<Result> {
+  const controller = new AbortController();
+  const onAbort = () => controller.abort();
+  signal?.addEventListener("abort", onAbort, { once: true });
+  if (signal?.aborted) controller.abort();
+  let timedOut = false;
+  const timer = setTimeout(() => {
+    timedOut = true;
+    controller.abort();
+  }, timeoutMs);
+  let rejectAbort: () => void = () => {};
+  const aborted = new Promise<never>((_, reject) => {
+    rejectAbort = () => reject(new DOMException("Aborted", "AbortError"));
+  });
+  controller.signal.addEventListener("abort", rejectAbort, { once: true });
+  if (controller.signal.aborted) rejectAbort();
   let response: Response;
-
+  let text: string;
   try {
-    response = await fetch(buildUrl(credentials, endpoint), {
-      method,
-      signal,
-      headers: body === undefined ? undefined : { "Content-Type": "application/json" },
-      body: body === undefined ? undefined : JSON.stringify(body),
-    });
+    response = await Promise.race([
+      fetch(buildUrl(credentials, endpoint, path), {
+        method,
+        signal: controller.signal,
+        headers: body === undefined ? undefined : { "Content-Type": "application/json" },
+        body: body === undefined ? undefined : JSON.stringify(body),
+      }),
+      aborted,
+    ]);
+    text = await Promise.race([response.text(), aborted]);
   } catch (error) {
+    if (timedOut) throw new GreenApiError("Превышено время ожидания ответа GREEN-API.");
     if (error instanceof DOMException && error.name === "AbortError") throw error;
-    throw new GreenApiError("Не удалось подключиться к GREEN-API. Проверьте интернет и повторите попытку.");
+    throw new GreenApiError(
+      "Не удалось подключиться к GREEN-API. Проверьте интернет и повторите попытку.",
+    );
+  } finally {
+    clearTimeout(timer);
+    signal?.removeEventListener("abort", onAbort);
+    controller.signal.removeEventListener("abort", rejectAbort);
   }
 
-  const text = await response.text();
   let payload: unknown = null;
   if (text) {
     try {
@@ -50,6 +85,9 @@ export async function request<Result>({ credentials, method, endpoint, body, sig
     }
   }
 
-  if (!response.ok) throw new GreenApiError(getErrorMessage(payload, response.status), response.status, payload);
+  if (!response.ok)
+    throw new GreenApiError(getErrorMessage(payload, response.status), response.status, payload);
+  if (text && typeof payload === "string")
+    throw new GreenApiError("GREEN-API вернул некорректный JSON.");
   return payload as Result;
 }
