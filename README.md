@@ -69,8 +69,6 @@ Workflow собирает приложение с базовым путём ре
 
 <img src="docs/media/demo-video.gif" alt="Запись работы приложения" width="100%">
 
-[Скачать видео демо (MP4, 1.0 MB)](docs/media/demo-video.mp4)
-
 ## Ссылки
 
 - [SendMessage](https://green-api.com/telegram/docs/api/sending/SendMessage/)
