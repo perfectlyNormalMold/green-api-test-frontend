@@ -25,6 +25,8 @@ import { SettingsNotice } from "./components/SettingsNotice";
 import { $mobileChatOpen } from "./model/mobile-chat";
 import "./model/session";
 
+const chatWallpaperUrl = `${import.meta.env.BASE_URL}chat-wallpaper.svg`;
+
 export function MessengerPage() {
   const theme = useTheme();
   const [credentials, chats, activeChatId, activeChat, mobileChatOpen] = useUnit([
@@ -100,10 +102,10 @@ export function MessengerPage() {
                 pointerEvents: "none",
                 background: "linear-gradient(160deg, #453651 0%, #654568 48%, #302a4b 100%)",
                 opacity: 0.55,
-                maskImage: 'url("/chat-wallpaper.svg")',
+                maskImage: `url("${chatWallpaperUrl}")`,
                 maskSize: { xs: "cover", md: "auto 1000px" },
                 maskRepeat: "repeat",
-                WebkitMaskImage: 'url("/chat-wallpaper.svg")',
+                WebkitMaskImage: `url("${chatWallpaperUrl}")`,
                 WebkitMaskSize: { xs: "cover", md: "auto 1000px" },
                 WebkitMaskRepeat: "repeat",
               }
